@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/vue"></script>
+  <link rel="stylesheet" href="http://davidtkatz.com/public_css/noteMaster.css">
+  <title>Notemaster</title>
+  <style>
+  .btn {
+    text-decoration: none;
+    box-shadow: none !important;
+    border: none !important;
+  }
+  .activeGreen {
+    background-color: #4cae4c;
+    color: white;
+  }
+
+  .activeYellow {
+    background-color: #eea236;
+    color: white;
+  }
+
+  .activeRed {
+    background-color: #d43f3a;
+    color: white;
+  }
+  .hidden {
+
+  }
+  .btn-default {
+    width: 100%;
+  }
+  .border {
+    transition: all 0.5s;
+  }
+  .medium {
+    background-color: #eea236;
+  }
+  .high {
+    background-color: #d43f3a;
+  }
+  .low {
+    background-color: #4cae4c;
+  }
+  .header-table {
+    padding-top: 4px;
+    padding-bottom: 4px;
+    color: white;
+    transition: all 0.5s;
+  }
+  .submit {
+    margin: 0 auto;
+    margin-bottom: 15px;
+    display: inherit;
+  }
+  .error {
+    position: relative;
+    border: 2px solid brown;
+    background: #FF9494;
+  }
+  .error-text {
+    position: absolute;
+    color: red;
+    font-weight: 700;
+    font-size: 13px;
+  }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <h3>{{title}}</h3>
+    <div class="form">
+      <div class="form-group">
+        <div class="form-group">
+          <label for="">Note Title</label>
+          <input class="form-control" type="text" v-model="note.title" v-bind:class="{error: isEmpty == true}" @click="isEmpty = false">
+          <p v-if="isEmpty" class="error-text">Title cannot be blank!</p>
+        </div>
+        <div class="form-group">
+          <label for="">Note Text</label>
+          <textarea class="form-control" v-model="note.text" rows="8" cols="80" v-bind:class="{error: isEmpty == true}" @click="isEmpty = false"></textarea>
+          <p v-if="isEmpty" class="error-text">Text cannot be blank!</p>
+        </div>
+        <label for="">Priority</label>
+        <div class="row" role="group" aria-label="...">
+          <div class="col-sm-4 btn-group" role="group">
+            <button type="button" class="btn btn-default" v-bind:class="{activeGreen: isActive == 'left'}"  @click="isActive = 'left'; priorityArray = 'Low'">Low</button>
+            <!-- ZRÓB TRZY KOLUMNY PIONOWE, KAŻDA LISTUJE INNY ARRAY, DODAJ DO ARRAYA NA PODSTAWIE NUMERKA PRZYPISANEGO DO NOTATKI -->
+          </div>
+          <div class="col-sm-4 btn-group" role="group">
+            <button type="button" class="btn btn-default" v-bind:class="{activeYellow: isActive == 'middle'}"  @click="isActive = 'middle'; priorityArray = 'Medium'">Medium</button>
+          </div>
+          <div class="col-sm-4 btn-group" role="group">
+            <button type="button" class="btn btn-default" v-bind:class="{activeRed: isActive == 'right'}"  @click="isActive = 'right'; priorityArray = 'High'">High</button>
+          </div>
+        </div>
+      </div>
+      <button class="btn btn-primary submit" @click="addNote(); clearInputs()">Submit new note!</button>
+    </div>
+    <div class="row">
+      <div class="col-sm-4">
+        <div class="border" v-bind:class="{low: isActive == 'left'}">
+          <div class="header-table low">Low priority</div>
+          <div class="col-sm-12 note" v-for="(note, index) in lowPriorNotes">
+            <div class="card">
+              <div class="card-block">
+                <h4 class="card-title">{{note.title}}</h4>
+                <h6 class="card-subtitle mb-2 text-muted">{{note.date}}</h6>
+                <p class="card-text">{{note.text}}</p>
+              </div>
+              <button class="close" style="position:absolute; top:0px; right: 3px;" @click="removeNote(index, 'Low')">&times;</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-sm-4">
+        <div class="border" v-bind:class="{medium: isActive == 'middle'}">
+          <div class="header-table medium">Medium priority</div>
+          <div class="col-sm-12 note" v-for="(note, index) in mediumPriorNotes">
+            <div class="card">
+              <div class="card-block">
+                <h4 class="card-title">{{note.title}}</h4>
+                <h6 class="card-subtitle mb-2 text-muted">{{note.date}}</h6>
+                <p class="card-text">{{note.text}}</p>
+              </div>
+              <button class="close" style="position:absolute; top:0px; right: 3px;" @click="removeNote(index, 'Medium')">&times;</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-sm-4">
+        <div class="border" v-bind:class="{high: isActive == 'right'}">
+          <div class="header-table high">High priority</div>
+          <div class="col-sm-12 note" v-for="(note, index) in highPriorNotes">
+            <div class="card">
+              <div class="card-block">
+                <h4 class="card-title">{{note.title}}</h4>
+                <h6 class="card-subtitle mb-2 text-muted">{{note.date}}</h6>
+                <p class="card-text">{{note.text}}</p>
+              </div>
+              <button class="close" style="position:absolute; top:0px; right: 3px;" @click="removeNote(index, 'High')">&times;</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+</div>
+  <script>
+    var app = new Vue({
+      el: '#app',
+      data: {
+        title: 'Notemaster',
+        note: {
+          title: '',
+          text: '',
+        },
+        highPriorNotes: [{
+          title: 'Odżywka',
+          text: 'Pamiętaj o odżywce na włosy przed spaniem!',
+          date: new Date(Date.now()).toLocaleString(),
+          priority: 'High priority',
+        }],
+        mediumPriorNotes: [{
+          title: 'Apka',
+          text: 'Pisz coś we vue chociaż przez 5 minut',
+          date: new Date(Date.now()).toLocaleString(),
+          priority:'Medium priority',
+        }],
+        lowPriorNotes: [{
+          title: 'Posprzątaj',
+          text: 'Pamiętaj o posprzątaniu pokoju',
+          date: new Date(Date.now()).toLocaleString(),
+          priority: 'Low priority',
+        }],
+        isActive: 'left',
+        priorityArray: 'Low',
+        isEmpty: false,
+      },
+      methods: {
+        addNote() {
+          let {text, title, priority} = this.note;
+          if (text != "" && title != "") {
+            this.isEmpty = false;
+            let notesArray = [];
+            if (this.priorityArray == 'Low') {
+              notesArray = this.lowPriorNotes
+            } else if (this.priorityArray == 'Medium') {
+              notesArray = this.mediumPriorNotes
+            } else if (this.priorityArray == 'High') {
+              notesArray = this.highPriorNotes
+            }
+            notesArray.push({
+              text,
+              title,
+              date: new Date(Date.now()).toLocaleString(),
+              priority: this.priorityArray + " priority",
+            })
+          } else {
+            this.isEmpty = true;
+            console.log('empty');
+          }
+          // this.highPriorNotes.sort(this.compare);
+        },
+        removeNote(index, priority) {
+          if (priority == 'Low') {
+            this.lowPriorNotes.splice(index, 1);
+          } else if (priority == 'Medium') {
+            this.mediumPriorNotes.splice(index, 1);
+          } else if (priority == 'High') {
+            this.highPriorNotes.splice(index, 1);
+          }
+        },
+        clearInputs() {
+          this.note.title = "";
+          this.note.text = "";
+        },
+        // compare(a, b) {
+        //   const priorityA = a.priority
+        //   const priorityB = b.priority
+        //
+        //   let comparison = 0;
+        //   if (priorityA > priorityB) {
+        //    comparison = 1;
+        //   } else if (priorityA < priorityB) {
+        //    comparison = -1;
+        //   }
+        //   return comparison;
+        // },
+        changePriority(e) {
+          this.priorityArray = e;
+          console.log(this.priorityArray);
+        },
+      }
+    })
+  </script>
+</body>
+</html>
